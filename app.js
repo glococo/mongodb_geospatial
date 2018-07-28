@@ -7,7 +7,7 @@ const Telegraf= require('telegraf')
 const session = require('telegraf/session')
 const Stage   = require('telegraf/stage')
 
-//require('./api-db-init')
+require('./api-db-init')
 const location= require('./api-location')
 const scenes  = require('./api-scenes')
 const command = require('./api-command')
