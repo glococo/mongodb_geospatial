@@ -3,6 +3,8 @@
 MongoDB’s geospatial indexing allows you to efficiently execute spatial queries on a collection that contains geospatial shapes and points.
 To showcase the capabilities of geospatial features, I wrote this Demo to show you how easy is to implement this feature in a useful Telegram Bot.
 
+Check out my bot in Telegram -> [@gasolinabaratabot](https://t.me/gasolinabaratabot)
+
 Bots are special Telegram accounts designed to handle messages automatically. Users can interact with bots by sending them command messages in private or group chats.
 These accounts serve as an interface for code running somewhere on your server.
 
@@ -13,13 +15,12 @@ These accounts serve as an interface for code running somewhere on your server.
 This is a Telegram Bot that help you find the cheapest Spanish fuel station around your location.
 The current downloaded Data is gathered from [Spainsh Portal](https://geoportalgasolineras.es) and is updated every 30 minutes.
 
-Check out my bot in Telegram -> [@gasolinabaratabot](https://t.me/gasolinabaratabot)
 
-## Run
-Before run, edit the enviroment vars in package.json
+## Run locally
 
 ```
 git clone https://github.com/glococo/mongodb_geospatial.git
+cd mongodb_geospatial
 npm i
-npm start
+BOT_TOKEN="_your_telegram_bot_token_" MONGO_DB="mongodb+srv://_user_:_pass_@_your_mongodb_server_/_mongodb_database_" ./api/app.js
 ```
