@@ -4,7 +4,7 @@
   "description": "A Telegram Bot that help you find the cheapest Spanish fuel station around your location. Check out Telegram Bot -> @gasolinabaratabot",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node api/app.js"
   },
   "repository": {
     "type": "git",

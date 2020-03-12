@@ -1,0 +1,6 @@
+{
+  "env": {
+    "BOT_TOKEN": "@bot_token",
+    "MONGO_DB" : "@mongo_db"
+  }
+}

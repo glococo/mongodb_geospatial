@@ -13,7 +13,7 @@ const { start, init } = require('./api-command')
 const stage   = new Stage([ scenes.radio ], { ttl: 60 })
 const radios  = [1, 2, 5, 10, 15, 25]
 
-const bot= new Telegraf( process.env.BOT_TOKEN )
+const bot= new Telegraf( process.env.BOT_TOKEN, { telegram:{ webhookReply: false } } )
 bot.context.db= { lastUpdate: null, updating: false, radios:radios, radTxt:radios.reduce((ac,e)=>[...ac,e.toString()],[]) }
 
 bot.use( session() )
@@ -27,12 +27,9 @@ bot.use( session() )
 log( "MongoDB Geospatial Demo working on real data from Spainsh OpenData Portal - Fuel Stations" )
 
 if ( require.main === module ) {
-  bot.startPolling()
-  log( `${now()} Bot started` )
+    bot.telegram.deleteWebhook().then( _=> bot.startPolling() )
+    log( `${now()} Bot started` )
 } else {
-  if( process.env.NOW_REGION ) {   // running on Now.sh
-    bot.telegram.setWebhook('https://mongodb-geospatial.now.sh/api/app.js')
-  }
-  module.exports = bot
-//  module.exports = bot.webhookCallback('/api/api.js')
+    if( process.env.NOW_REGION ) bot.telegram.setWebhook('https://mongodb-geospatial.now.sh/api/app')   // running on zeit.co
+    module.exports = bot.webhookCallback('/api/app')
 }
