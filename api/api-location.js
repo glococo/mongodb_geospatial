@@ -5,8 +5,7 @@ const spain  = require('./api-db')
 
 async function getFuels(ctx){
   ctx.session.location= [ctx.message.location.longitude, ctx.message.location.latitude]
-  log(ctx.session.location)
-  let search= await spain.stations.find({ location:{ $near:{ $geometry:{ type:"Point", coordinates: ctx.session.location }, $maxDistance: ctx.session.radio } } }).lean()
+  let search= await spain.findStations( ctx.session.location, ctx.session.radio )
   if( search.length ) {
     ctx.session.fuels= search.reduce( (ac,v)=> [...ac,...Object.keys(v.prices).filter(e=>!ac.includes(e))] ,[] )
     return ctx.reply( 'Which type of fuel are you looking for ?', Markup.keyboard(ctx.session.fuels,{columns:2}).oneTime().resize().extra() )
@@ -16,15 +15,10 @@ async function getFuels(ctx){
 
 async function getStations(ctx){
   let fuel   = "prices." + ctx.message.text.trim()
-  let search = await spain.stations.aggregate([
-                  { $geoNear:{ near:{ type:"Point", coordinates: ctx.session.location }, distanceField: "metersAway", maxDistance: ctx.session.radio, query:{ [fuel]:{ $exists:true } }, spherical: true } },
-                  { $sort:{ [fuel]: 1 } },
-                  { $limit: 3 }
-               ])
+  let search = await spain.findCloserStations(ctx.session.location, ctx.session.radio, fuel)
 
   if( search.length ) {
     for( let e of search ) {
-      log(e)
       await ctx.reply(`${e.prices[ctx.message.text.trim()]}€ a ${(e.metersAway/1000).toFixed(2)} kmts : ${e.name}, ${e.addr} (${e.hour})`, Markup.removeKeyboard().resize().extra())
       await ctx.replyWithLocation(e.location.coordinates[1], e.location.coordinates[0])
     }

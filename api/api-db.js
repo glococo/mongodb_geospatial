@@ -4,26 +4,46 @@ const mongo = require('mongoose')
 const log   = (...v)=> console.log(...v)
 const now   =     _ => `[ ${new Date().toISOString().slice(0,19)} ] : `
 
-mongo.connect( process.env.MONGO_DB, { useNewUrlParser:true, useUnifiedTopology:true, useCreateIndex:true } )
-        .then( _=>log( now()+'MongoDB Connected') )
-       .catch( e=>log( now()+'MongoDB connect error',e) )
+let conn, fuel, location, station
 
-const fuel     = mongo.Schema({ }, { strict:false, _id:false })
-const location = mongo.Schema({ type:{type:String}, coordinates:[Number] }, { _id:false })
-const stations = mongo.model('stations', { id:Number, name:String, addr:String, hour:String, location:{ type:location, index:'2dsphere' }, prices:fuel }, 'stations')
+const connect= _=> new Promise( async (resolve,reject) => {
+  if ( conn ) return resolve(1)
+  conn = await mongo.createConnection( process.env.MONGO_DB, { useNewUrlParser:true, useUnifiedTopology:true, useCreateIndex:true, bufferCommands:false, bufferMaxEntries:0 } ).catch( _=>reject(0) )
+  if ( !conn ) return setTimeout( _=>connect(), 2000)
 
+  fuel     = new mongo.Schema({ }, { strict:false, _id:false })
+  location = new mongo.Schema({ type:{type:String}, coordinates:[Number] }, { _id:false })
+  station  = conn.model('stations', { id:Number, name:String, addr:String, hour:String, location:{ type:location, index:'2dsphere' }, prices:fuel }, 'stations')
+
+  return resolve(1)
+})
+async function findStations(location, radio) {
+  while(!conn) { await connect() }
+  return station.find({ location:{ $near:{ $geometry:{ type:"Point", coordinates: location }, $maxDistance: radio } } }).lean()
+}
+async function findCloserStations(location, radio, fuel) {
+  while(!conn) { await connect() }
+  return station.aggregate([
+                  { $geoNear:{ near:{ type:"Point", coordinates: location }, distanceField: "metersAway", maxDistance: radio, query:{ [fuel]:{ $exists:true } }, spherical: true } },
+                  { $sort:{ [fuel]: 1 } },
+                  { $limit: 3 }
+               ])
+}
 async function updateStations( data ) {
-  await stations.deleteMany({})
-  let update = await stations.insertMany( data ).catch( err=>log("Uploading err->",err) )
+  while(!conn) { await connect() }
+  await station.deleteMany({})
+  let update = await station.insertMany( data ).catch( err=>log("Uploading err->",err) )
   return update.length
 }
 
 async function lastUpdateInMinutes() {
-  let recordDay = await stations.findOne({},{_id:1}).catch( e=> log('Error getting timestamp of one document') )
+  while(!conn) { await connect() }
+  let recordDay = await station.findOne({},{_id:1}).catch( e=> log('Error getting timestamp of one document') )
   return Math.round( recordDay._id.getTimestamp() /1000 /60 ) // returning timestamp without seconds and milliseconds
 }
 
 async function sanitize(list){
+  while(!conn) { await connect() }
   let update=[]
   list.ListaEESSPrecio.forEach(e=>{
     let provider= { prices:{}, location:{ type: "Point", coordinates:[] } }
@@ -41,4 +61,4 @@ async function sanitize(list){
   return await updateStations( update )
 }
 
-module.exports= { stations, lastUpdateInMinutes, sanitize }
+module.exports= { findStations, findCloserStations, lastUpdateInMinutes, sanitize }
