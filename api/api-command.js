@@ -1,5 +1,6 @@
 'use strict'
 
+const now   =     _ => `[ ${new Date().toISOString().slice(0,19)} ] : `
 const log   = (...v)=> console.log(...v)
 const fetch = require('node-fetch')
 const db    = require('./api-db')
@@ -8,13 +9,13 @@ const url   = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/
 async function init(ctx,next){
   if( !ctx.db.updating && (!ctx.db.lastUpdate || isMoreThanOneDayOld( ctx.db.lastUpdate )) ) requestDBupdate(ctx).catch( _=>ctx.db.updating=false )
   if( !ctx.session.radio ) ctx.session.radio= ctx.db.radios[2]*1000
-  next().catch( e=>log("Next: "+ctx.message,e) )
+  next().catch( e=>log( now()+'Next: '+ctx.message,e) )
 }
 
 function isMoreThanOneDayOld( lastUpdate ) {
   if( !lastUpdate ) return true
-  let now = Math.round( new Date().getTime() / 1000 / 60 )
-  if( (now - lastUpdate) > (24*60) ) return true
+  let rightNow = Math.round( new Date().getTime() / 1000 / 60 )
+  if( (rightNow - lastUpdate) > (24*60) ) return true
   return false
 }
 async function requestDBupdate(ctx) {
@@ -27,7 +28,7 @@ async function requestDBupdate(ctx) {
   let response = await fetch( url )
   let body     = await response.json()
   let stations = await db.sanitize( body )
-  log('Received records ... ' + stations)
+  log( now()+'Received records ... ' + stations)
   if( stations > 1000 ) ctx.db.lastUpdate = await db.lastUpdateInMinutes()
   ctx.db.updating = false
 }

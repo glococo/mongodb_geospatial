@@ -2,9 +2,9 @@
   "name": "mongodb_geospatial",
   "version": "0.9.9",
   "description": "A Telegram Bot that help you find the cheapest Spanish fuel station around your location. Check out Telegram Bot -> @gasolinabaratabot",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node api/app.js"
+    "start": "node api/index.js"
   },
   "repository": {
     "type": "git",

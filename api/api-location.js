@@ -1,5 +1,6 @@
 'use strict'
 const Markup = require('telegraf/markup')
+const now    =     _ => `[ ${new Date().toISOString().slice(0,19)} ] : `
 const log    = (...v)=> console.log(...v)
 const spain  = require('./api-db')
 
@@ -18,10 +19,13 @@ async function getStations(ctx){
   let search = await spain.findCloserStations(ctx.session.location, ctx.session.radio, fuel)
 
   if( search.length ) {
+    ctx.webhookReply = false
     for( let e of search ) {
       await ctx.reply(`${e.prices[ctx.message.text.trim()]}€ a ${(e.metersAway/1000).toFixed(2)} kmts : ${e.name}, ${e.addr} (${e.hour})`, Markup.removeKeyboard().resize().extra())
       await ctx.replyWithLocation(e.location.coordinates[1], e.location.coordinates[0])
     }
+    ctx.webhookReply = true
+    ctx.reply('Search finished.')
     return
   }
   return ctx.reply(`Something wrong happend. There are no fuel stations with your selected fuel.`, Markup.removeKeyboard().resize().extra() )
