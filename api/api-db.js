@@ -42,6 +42,12 @@ async function lastUpdateInMinutes() {
   return Math.round( recordDay._id.getTimestamp() /1000 /60 ) // returning timestamp without seconds and milliseconds
 }
 
+async function lastUpdate() {
+  while(!conn) { await connect() }
+  let recordDay = await station.findOne({},{_id:1}).catch( e=> log('Error getting timestamp of one document') )
+  return Math.round( recordDay._id.getTimestamp() /1000 ) // returning timestamp without milliseconds
+}
+
 async function sanitize(list){
   while(!conn) { await connect() }
   let update=[]
@@ -61,4 +67,4 @@ async function sanitize(list){
   return await updateStations( update )
 }
 
-module.exports= { findStations, findCloserStations, lastUpdateInMinutes, sanitize }
+module.exports= { findStations, findCloserStations, lastUpdateInMinutes, sanitize, lastUpdate }
